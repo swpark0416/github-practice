@@ -1,17 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>GitHub 형상 관리 실습</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { color: #2c3e50; font-size: 24px; }
+        .status {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .profile {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
-    <h1>내 첫 번째 GitHub 프로젝트</h1>
-    <p>상태: 개발 진행 중</p>
-
-    <!-- 👇 아래 프로필 영역 추가 -->
-    <hr>
-    <h2>작성자 프로필</h2>
-    <p>이름: 홍길동 (군복무 중!)</p>
-    <p>한줄평: GitHub 웹으로 형상 관리 완벽 적응 중입니다.</p>
+    <div class="card">
+        <h1>🚀 GitHub 형상 관리 실습</h1>
+        <p class="status">🟢 상태: 두 번째 브랜치 적용 완료!</p>
+        
+        <div class="profile">
+            <h3>👤 작성자 프로필</h3>
+            <p><strong>이름:</strong> swpark0416</p>
+            <p><strong>한줄평:</strong> 브랜치 다루기 완료! 이제 형상 관리가 뭔지 감이 잡힙니다.</p>
+        </div>
+    </div>
 </body>
 </html>
