@@ -2,43 +2,67 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>API 통신 실습</title>
+    <title>API POST 실습</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-        button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
-        .post-card { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 8px; }
+        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        input, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .result-card { background: #e9ecef; padding: 15px; border-radius: 6px; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <h2>📡 백엔드 서버와 통신하기 (API)</h2>
-    <button onclick="getPost()">서버에서 1번 글 불러오기</button>
+    <h2>✍️ 서버에 새 글 등록하기 (POST)</h2>
 
-    <div id="result">
-        <!-- 서버에서 받아온 데이터가 들어올 자리 -->
+    <div class="input-group">
+        <input type="text" id="titleInput" placeholder="제목을 입력하세요">
+        <textarea id="bodyInput" placeholder="내용을 입력하세요" rows="3"></textarea>
+        <button onclick="createPost()">서버로 전송하기</button>
     </div>
 
-    <script>
-        // 백엔드 API를 호출하는 함수
-        function getPost() {
-            document.getElementById('result').innerHTML = "<p>데이터 불러오는 중...⏳</p>";
+    <div id="result"></div>
 
-            // 1. fetch()로 인터넷 상의 백엔드 서버 주소로 GET 요청
-            fetch('https://jsonplaceholder.typicode.com/posts/1')
-                .then(response => response.json()) // 2. 서버가 준 응답을 JS 객체로 변환
-                .then(data => {
-                    // 3. 변환된 데이터를 화면에 보여주기
-                    document.getElementById('result').innerHTML = `
-                        <div class="post-card">
-                            <h3>📌 제목: ${data.title}</h3>
-                            <p>${data.body}</p>
-                            <small>글 번호: ${data.id} | 작성자 ID: ${data.userId}</small>
-                        </div>
-                    `;
+    <script>
+        function createPost() {
+            const title = document.getElementById('titleInput').value;
+            const body = document.getElementById('bodyInput').value;
+
+            if (!title || !body) {
+                alert("제목과 내용을 모두 입력해 주세요!");
+                return;
+            }
+
+            document.getElementById('result').innerHTML = "<p>서버로 데이터 전송 중...🚀</p>";
+
+            // 1. fetch의 두 번째 인자로 옵션 객체를 전달합니다.
+            fetch('https://jsonplaceholder.typicode.com/posts', {
+                method: 'POST', // 요청 방식
+                headers: {
+                    'Content-Type': 'application/json' // 서버에게 "JSON 형태로 데이터 보낸다"고 알려줌
+                },
+                // 자바스크립트 객체를 JSON 문자열로 변환하여 전송
+                body: JSON.stringify({
+                    title: title,
+                    body: body,
+                    userId: 1
                 })
-                .catch(error => {
-                    console.error('에러 발생:', error);
-                    alert('데이터를 불러오지 못했습니다.');
-                });
+            })
+            .then(response => response.json()) // 서버가 등록 결과를 JSON으로 응답
+            .then(data => {
+                // 2. 서버가 가짜로 생성해 준 ID(보통 101번)와 함께 응답 결과를 화면에 표시
+                document.getElementById('result').innerHTML = `
+                    <div class="result-card">
+                        <h3>✅ 서버 등록 성공!</h3>
+                        <p><strong>생성된 ID:</strong> ${data.id}</p>
+                        <p><strong>제목:</strong> ${data.title}</p>
+                        <p><strong>내용:</strong> ${data.body}</p>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('에러 발생:', error);
+                alert('등록에 실패했습니다.');
+            });
         }
     </script>
 </body>
