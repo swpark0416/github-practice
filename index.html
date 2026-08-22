@@ -2,85 +2,122 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>API PUT & DELETE 실습</title>
+    <title>API CRUD To-Do List</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 450px; margin: auto; }
-        .box { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #f9f9f9; }
-        input { width: 90%; padding: 8px; margin-bottom: 8px; }
-        button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
-        .btn-update { background-color: #ffc107; color: black; }
-        .btn-delete { background-color: #dc3545; }
-        #result { background: #eef2f5; padding: 15px; border-radius: 6px; }
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; background: #f4f6f8; }
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        button { padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: #28a745; color: white; }
+        .btn-delete { background: #dc3545; color: white; padding: 6px 10px; font-size: 12px; }
+        
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+        li.completed span { text-decoration: line-through; color: #888; }
+        .todo-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h2>✏️ 서버 데이터 수정 & 삭제</h2>
+    <div class="container">
+        <h2>📝 API 연동 To-Do List</h2>
 
-    <!-- 수정 섹션 -->
-    <div class="box">
-        <h3>1번 글 수정하기 (PUT)</h3>
-        <input type="text" id="updateTitle" value="수정할 새 제목입니다">
-        <button class="btn-update" onclick="updatePost()">1번 글 수정 (PUT)</button>
-    </div>
+        <!-- C: Create (새 할 일 추가) -->
+        <div class="input-group">
+            <input type="text" id="todoInput" placeholder="할 일을 입력하세요...">
+            <button class="btn-add" onclick="addTodo()">추가</button>
+        </div>
 
-    <!-- 삭제 섹션 -->
-    <div class="box">
-        <h3>1번 글 삭제하기 (DELETE)</h3>
-        <button class="btn-delete" onclick="deletePost()">1번 글 삭제 (DELETE)</button>
-    </div>
-
-    <div id="result">
-        <p>버튼을 누르면 서버 응답 결과가 나옵니다.</p>
+        <!-- R: Read (목록 출력 위치) -->
+        <ul id="todoList">
+            <li>데이터를 불러오는 중...⏳</li>
+        </ul>
     </div>
 
     <script>
-        // 1. PUT 요청 (데이터 수정)
-        function updatePost() {
-            const newTitle = document.getElementById('updateTitle').value;
-            document.getElementById('result').innerHTML = "<p>수정 요청 중...⏳</p>";
+        const API_URL = 'https://jsonplaceholder.typicode.com/todos';
 
-            // /posts/1 처럼 수정할 글의 ID를 URL 뒤에 붙입니다.
-            fetch('https://jsonplaceholder.typicode.com/posts/1', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id: 1,
-                    title: newTitle,
-                    body: '내용도 함께 업데이트되었습니다.',
-                    userId: 1
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('result').innerHTML = `
-                    <h4>✅ 수정 성공!</h4>
-                    <p><strong>수정된 ID:</strong> ${data.id}</p>
-                    <p><strong>새 제목:</strong> ${data.title}</p>
-                `;
-            })
-            .catch(err => console.error(err));
+        // 페이지가 열리면 바로 R(Read) 실행
+        window.onload = fetchTodos;
+
+        // 1. READ: 할 일 목록 가져오기 (GET)
+        function fetchTodos() {
+            fetch(`${API_URL}?_limit=5`) // 연습을 위해 5개만 가져옴
+                .then(res => res.json())
+                .then(todos => {
+                    const list = document.getElementById('todoList');
+                    list.innerHTML = ''; // 초기화
+
+                    todos.forEach(todo => {
+                        list.appendChild(createTodoElement(todo));
+                    });
+                });
         }
 
-        // 2. DELETE 요청 (데이터 삭제)
-        function deletePost() {
-            document.getElementById('result').innerHTML = "<p>삭제 요청 중...⏳</p>";
+        // HTML 태그 생성 함수
+        function createTodoElement(todo) {
+            const li = document.createElement('li');
+            if (todo.completed) li.classList.add('completed');
 
-            // 삭제할 글의 ID(1번)를 지정하여 DELETE 메서드로 호출합니다.
-            fetch('https://jsonplaceholder.typicode.com/posts/1', {
+            li.innerHTML = `
+                <div class="todo-item" onclick="toggleTodo(${todo.id}, ${todo.completed})">
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                    <span>${todo.title}</span>
+                </div>
+                <button class="btn-delete" onclick="deleteTodo(${todo.id}, event)">삭제</button>
+            `;
+            return li;
+        }
+
+        // 2. CREATE: 새 할 일 추가하기 (POST)
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const title = input.value.trim();
+            if (!title) return alert('할 일을 입력해 주세요!');
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, completed: false, userId: 1 })
+            })
+            .then(res => res.json())
+            .then(newTodo => {
+                // 화면에 바로 반영 (가짜 서버 특성상 임의 ID 부여)
+                const list = document.getElementById('todoList');
+                list.prepend(createTodoElement({ ...newTodo, id: Date.now() }));
+                input.value = '';
+                alert('✅ 서버에 등록되었습니다!');
+            });
+        }
+
+        // 3. UPDATE: 완료 상태 토글 (PATCH / PUT)
+        function toggleTodo(id, currentStatus) {
+            fetch(`${API_URL}/${id}`, {
+                method: 'PATCH', // 일부 값(completed)만 수정할 때는 PATCH 사용
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed: !currentStatus })
+            })
+            .then(res => res.json())
+            .then(() => {
+                alert(`✏️ ${id}번 할 일 상태 변경 완료!`);
+                // 실습 편의상 화면새로고침 대신 새로 불러오기
+                fetchTodos();
+            });
+        }
+
+        // 4. DELETE: 할 일 삭제하기 (DELETE)
+        function deleteTodo(id, event) {
+            event.stopPropagation(); // 체크박스 클릭 이벤트와 겹치지 않게 방지
+
+            fetch(`${API_URL}/${id}`, {
                 method: 'DELETE'
             })
-            .then(response => {
-                // DELETE 요청 성공 시 서버는 빈 객체({})나 200/204 상태코드를 넘겨줍니다.
-                if (response.ok) {
-                    document.getElementById('result').innerHTML = `
-                        <h4>🗑️ 삭제 성공!</h4>
-                        <p>1번 글이 서버에서 정상적으로 삭제 처리되었습니다.</p>
-                    `;
+            .then(res => {
+                if (res.ok) {
+                    alert(`🗑️ ${id}번 할 일이 삭제되었습니다!`);
+                    fetchTodos();
                 }
-            })
-            .catch(err => console.error(err));
+            });
         }
     </script>
 </body>
