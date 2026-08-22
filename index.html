@@ -2,67 +2,85 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>API POST 실습</title>
+    <title>API PUT & DELETE 실습</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        input, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .result-card { background: #e9ecef; padding: 15px; border-radius: 6px; margin-top: 15px; }
+        body { font-family: sans-serif; padding: 20px; max-width: 450px; margin: auto; }
+        .box { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #f9f9f9; }
+        input { width: 90%; padding: 8px; margin-bottom: 8px; }
+        button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .btn-update { background-color: #ffc107; color: black; }
+        .btn-delete { background-color: #dc3545; }
+        #result { background: #eef2f5; padding: 15px; border-radius: 6px; }
     </style>
 </head>
 <body>
-    <h2>✍️ 서버에 새 글 등록하기 (POST)</h2>
+    <h2>✏️ 서버 데이터 수정 & 삭제</h2>
 
-    <div class="input-group">
-        <input type="text" id="titleInput" placeholder="제목을 입력하세요">
-        <textarea id="bodyInput" placeholder="내용을 입력하세요" rows="3"></textarea>
-        <button onclick="createPost()">서버로 전송하기</button>
+    <!-- 수정 섹션 -->
+    <div class="box">
+        <h3>1번 글 수정하기 (PUT)</h3>
+        <input type="text" id="updateTitle" value="수정할 새 제목입니다">
+        <button class="btn-update" onclick="updatePost()">1번 글 수정 (PUT)</button>
     </div>
 
-    <div id="result"></div>
+    <!-- 삭제 섹션 -->
+    <div class="box">
+        <h3>1번 글 삭제하기 (DELETE)</h3>
+        <button class="btn-delete" onclick="deletePost()">1번 글 삭제 (DELETE)</button>
+    </div>
+
+    <div id="result">
+        <p>버튼을 누르면 서버 응답 결과가 나옵니다.</p>
+    </div>
 
     <script>
-        function createPost() {
-            const title = document.getElementById('titleInput').value;
-            const body = document.getElementById('bodyInput').value;
+        // 1. PUT 요청 (데이터 수정)
+        function updatePost() {
+            const newTitle = document.getElementById('updateTitle').value;
+            document.getElementById('result').innerHTML = "<p>수정 요청 중...⏳</p>";
 
-            if (!title || !body) {
-                alert("제목과 내용을 모두 입력해 주세요!");
-                return;
-            }
-
-            document.getElementById('result').innerHTML = "<p>서버로 데이터 전송 중...🚀</p>";
-
-            // 1. fetch의 두 번째 인자로 옵션 객체를 전달합니다.
-            fetch('https://jsonplaceholder.typicode.com/posts', {
-                method: 'POST', // 요청 방식
+            // /posts/1 처럼 수정할 글의 ID를 URL 뒤에 붙입니다.
+            fetch('https://jsonplaceholder.typicode.com/posts/1', {
+                method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json' // 서버에게 "JSON 형태로 데이터 보낸다"고 알려줌
+                    'Content-Type': 'application/json'
                 },
-                // 자바스크립트 객체를 JSON 문자열로 변환하여 전송
                 body: JSON.stringify({
-                    title: title,
-                    body: body,
+                    id: 1,
+                    title: newTitle,
+                    body: '내용도 함께 업데이트되었습니다.',
                     userId: 1
                 })
             })
-            .then(response => response.json()) // 서버가 등록 결과를 JSON으로 응답
+            .then(response => response.json())
             .then(data => {
-                // 2. 서버가 가짜로 생성해 준 ID(보통 101번)와 함께 응답 결과를 화면에 표시
                 document.getElementById('result').innerHTML = `
-                    <div class="result-card">
-                        <h3>✅ 서버 등록 성공!</h3>
-                        <p><strong>생성된 ID:</strong> ${data.id}</p>
-                        <p><strong>제목:</strong> ${data.title}</p>
-                        <p><strong>내용:</strong> ${data.body}</p>
-                    </div>
+                    <h4>✅ 수정 성공!</h4>
+                    <p><strong>수정된 ID:</strong> ${data.id}</p>
+                    <p><strong>새 제목:</strong> ${data.title}</p>
                 `;
             })
-            .catch(error => {
-                console.error('에러 발생:', error);
-                alert('등록에 실패했습니다.');
-            });
+            .catch(err => console.error(err));
+        }
+
+        // 2. DELETE 요청 (데이터 삭제)
+        function deletePost() {
+            document.getElementById('result').innerHTML = "<p>삭제 요청 중...⏳</p>";
+
+            // 삭제할 글의 ID(1번)를 지정하여 DELETE 메서드로 호출합니다.
+            fetch('https://jsonplaceholder.typicode.com/posts/1', {
+                method: 'DELETE'
+            })
+            .then(response => {
+                // DELETE 요청 성공 시 서버는 빈 객체({})나 200/204 상태코드를 넘겨줍니다.
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <h4>🗑️ 삭제 성공!</h4>
+                        <p>1번 글이 서버에서 정상적으로 삭제 처리되었습니다.</p>
+                    `;
+                }
+            })
+            .catch(err => console.error(err));
         }
     </script>
 </body>
